@@ -4,7 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.Data;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Embeddable
@@ -12,12 +12,12 @@ public class PromotionData {
     @Column(name = "buyer_id")
     private Long buyerId;
 
-    @Column(name = "budgetday")
-    private Integer budgetDay;
+    @Column(name = "budget_in_day")
+    private Integer budgetInDay;
 
-    @Column(name = "startdate")
-    private LocalDate startDate;
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
 
-    @Column(name = "enddate")
-    private LocalDate endDate;
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
 }

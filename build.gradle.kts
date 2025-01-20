@@ -23,23 +23,29 @@ dependencies {
     implementation("org.springframework.kafka:spring-kafka")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
-    implementation("org.projectlombok:lombok")
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
-    runtimeOnly("org.postgresql:postgresql")
-
+    /**
+     * Database
+     */
     implementation("org.liquibase:liquibase-core")
-
-    annotationProcessor("org.projectlombok:lombok:1.18.26")
-
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    runtimeOnly("org.postgresql:postgresql")
 
     /**
      * Tests
      */
-
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    /**
+     * Utils & Logging
+     */
+    implementation("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok:1.18.26")
+    implementation("org.mapstruct:mapstruct:1.5.3.Final")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.5.3.Final")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2")
 }
 
 tasks.withType<Test> {
