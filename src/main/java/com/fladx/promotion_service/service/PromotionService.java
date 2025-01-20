@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -53,12 +54,38 @@ public class PromotionService {
             PromotionUserDto promotionUserDto = deserializeMessage(record.value(), PromotionUserDto.class);
             PromotionUser promotionUser = promotionUserMapper.toEntity(promotionUserDto);
             promotionUserRepository.save(promotionUser);
-            budgetCacheService.updateUserBudget(promotionUserRepository.findAll());
+            budgetCacheService.updateUserBudget(getAllPromotionUsers());
         } else if (key.equals("event")) {
             PromotionEventDto promotionEventDTO = deserializeMessage(record.value(), PromotionEventDto.class);
             PromotionEvent promotionEvent = promotionEventMapper.toEntity(promotionEventDTO);
             promotionEventRepository.save(promotionEvent);
-            budgetCacheService.updateEventBudget(promotionEventRepository.findAll());
+            budgetCacheService.updateEventsBudget(getAllPromotionEvents());
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<Long> getEvents() {
+        if (budgetCacheService.hasEventCache()) {
+            return budgetCacheService.getEvents();
+        }
+
+        return budgetCacheService.updateEventsBudget(getAllPromotionEvents());
+    }
+
+    @Transactional(readOnly = true)
+    public List<Long> getUsers() {
+        if (budgetCacheService.hasUserCache()) {
+            return budgetCacheService.getUsers();
+        }
+
+        return budgetCacheService.updateUserBudget(getAllPromotionUsers());
+    }
+
+    private List<PromotionEvent> getAllPromotionEvents() {
+        return promotionEventRepository.findAll();
+    }
+
+    private List<PromotionUser> getAllPromotionUsers() {
+        return promotionUserRepository.findAll();
     }
 }

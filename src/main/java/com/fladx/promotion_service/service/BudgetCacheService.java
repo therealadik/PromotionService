@@ -21,10 +21,11 @@ public class BudgetCacheService {
     public static final String EVENT_PROMOTION_KEY = "event_promotion";
     public static final int EVENT_CACHE_TIMEOUT = 1;
 
+    public static final TimeUnit TIME_UNIT_EXPIRED_CACHE = TimeUnit.MINUTES;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public void updateUserBudget(List<PromotionUser> users) {
+    public List<Long> updateUserBudget(List<PromotionUser> users) {
         LocalDateTime now = LocalDateTime.now();
         List<Long> sortedUserIds = users.stream()
                 .filter(promotionUser -> promotionUser.getPromotionData().getStartDate().isBefore(now)
@@ -38,10 +39,11 @@ public class BudgetCacheService {
                 .map(e -> e.getKey())
                 .toList();
 
-        redisTemplate.opsForValue().set(USER_PROMOTION_KEY, sortedUserIds, USER_CACHE_TIMEOUT, TimeUnit.HOURS);
+        redisTemplate.opsForValue().set(USER_PROMOTION_KEY, sortedUserIds, USER_CACHE_TIMEOUT, TIME_UNIT_EXPIRED_CACHE);
+        return sortedUserIds;
     }
 
-    public void updateEventBudget(List<PromotionEvent> events) {
+    public List<Long> updateEventsBudget(List<PromotionEvent> events) {
         LocalDateTime now = LocalDateTime.now();
         List<Long> sortedEventIds = events.stream()
                 .filter(promotionEvent -> promotionEvent.getPromotionData().getStartDate().isBefore(now)
@@ -55,6 +57,25 @@ public class BudgetCacheService {
                 .map(e -> e.getKey())
                 .toList();
 
-        redisTemplate.opsForValue().set(EVENT_PROMOTION_KEY, sortedEventIds, EVENT_CACHE_TIMEOUT, TimeUnit.HOURS);
+        redisTemplate.opsForValue().set(EVENT_PROMOTION_KEY, sortedEventIds, EVENT_CACHE_TIMEOUT, TIME_UNIT_EXPIRED_CACHE);
+        return sortedEventIds;
+    }
+
+    public boolean hasEventCache() {
+        return redisTemplate.hasKey(EVENT_PROMOTION_KEY);
+    }
+
+    public boolean hasUserCache() {
+        return redisTemplate.hasKey(USER_PROMOTION_KEY);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Long> getEvents() {
+        return (List<Long>) redisTemplate.opsForValue().get(EVENT_PROMOTION_KEY);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Long> getUsers() {
+        return (List<Long>) redisTemplate.opsForValue().get(USER_PROMOTION_KEY);
     }
 }
