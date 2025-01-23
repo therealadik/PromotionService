@@ -10,8 +10,8 @@ import java.util.stream.Stream;
 @Repository
 public interface PromotionUserRepository extends JpaRepository<PromotionUser, Long> {
     @Query(nativeQuery = true, value = """
-            SELECT * from promotion_user
-                        where start_date <= current_date and end_date >= current_date LIMIT 100
+            select * from promotion_user
+            where start_date <= current_date and end_date >= current_date LIMIT 100
             """)
     Stream<PromotionUser> findActivePromotionUsers();
 }
