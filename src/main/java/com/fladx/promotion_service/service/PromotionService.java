@@ -15,8 +15,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.Serializable;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -30,22 +30,6 @@ public class PromotionService {
     private final PromotionUserRepository promotionUserRepository;
     private final BudgetCacheService budgetCacheService;
 
-    private <T> T deserializeMessage(String message, Class<T> clazz) {
-        try {
-            return objectMapper.readValue(message, clazz);
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка десериализации сообщения", e);
-        }
-    }
-
-    private String convertToJson(Serializable request) {
-        try {
-            return objectMapper.writeValueAsString(request);
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка сериализации JSON", e);
-        }
-    }
-
     @Transactional
     public void processBoughtPromotion(ConsumerRecord<String, String> record) {
         String key = record.key();
@@ -54,12 +38,12 @@ public class PromotionService {
             PromotionUserDto promotionUserDto = deserializeMessage(record.value(), PromotionUserDto.class);
             PromotionUser promotionUser = promotionUserMapper.toEntity(promotionUserDto);
             promotionUserRepository.save(promotionUser);
-            budgetCacheService.updateUserBudget(getAllPromotionUsers());
+            budgetCacheService.updateUsersCache(getAllPromotionUsers());
         } else if (key.equals("event")) {
             PromotionEventDto promotionEventDTO = deserializeMessage(record.value(), PromotionEventDto.class);
             PromotionEvent promotionEvent = promotionEventMapper.toEntity(promotionEventDTO);
             promotionEventRepository.save(promotionEvent);
-            budgetCacheService.updateEventsBudget(getAllPromotionEvents());
+            budgetCacheService.updateEventsCache(getAllPromotionEvents());
         }
     }
 
@@ -69,7 +53,7 @@ public class PromotionService {
             return budgetCacheService.getEvents();
         }
 
-        return budgetCacheService.updateEventsBudget(getAllPromotionEvents());
+        return budgetCacheService.updateEventsCache(getAllPromotionEvents());
     }
 
     @Transactional(readOnly = true)
@@ -78,14 +62,22 @@ public class PromotionService {
             return budgetCacheService.getUsers();
         }
 
-        return budgetCacheService.updateUserBudget(getAllPromotionUsers());
+        return budgetCacheService.updateUsersCache(getAllPromotionUsers());
     }
 
-    private List<PromotionEvent> getAllPromotionEvents() {
-        return promotionEventRepository.findAll();
+    private Stream<PromotionEvent> getAllPromotionEvents() {
+        return promotionEventRepository.findActivePromotionEvents();
     }
 
-    private List<PromotionUser> getAllPromotionUsers() {
-        return promotionUserRepository.findAll();
+    private Stream<PromotionUser> getAllPromotionUsers() {
+        return promotionUserRepository.findActivePromotionUsers();
+    }
+
+    private <T> T deserializeMessage(String message, Class<T> clazz) {
+        try {
+            return objectMapper.readValue(message, clazz);
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка десериализации сообщения", e);
+        }
     }
 }

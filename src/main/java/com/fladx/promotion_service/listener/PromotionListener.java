@@ -1,4 +1,4 @@
-package com.fladx.promotion_service.controller;
+package com.fladx.promotion_service.listener;
 
 import com.fladx.promotion_service.config.KafkaConfig;
 import com.fladx.promotion_service.service.PromotionService;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Controller;
 @Slf4j
 @Controller
 @RequiredArgsConstructor
-public class KafkaController {
+public class PromotionListener {
 
     private final PromotionService promotionService;
 
