@@ -3,6 +3,7 @@ package com.fladx.promotion_service.service;
 import com.fladx.promotion_service.model.PromotionEvent;
 import com.fladx.promotion_service.model.PromotionUser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +11,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BudgetCacheService {
@@ -25,9 +28,9 @@ public class BudgetCacheService {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public List<Long> updateUserBudget(List<PromotionUser> users) {
+    public List<Long> updateUsersCache(Stream<PromotionUser> users) {
         LocalDateTime now = LocalDateTime.now();
-        List<Long> sortedUserIds = users.stream()
+        List<Long> sortedUserIds = users
                 .filter(promotionUser -> promotionUser.getPromotionData().getStartDate().isBefore(now)
                         && promotionUser.getPromotionData().getEndDate().isAfter(now))
                 .collect(Collectors.groupingBy(
@@ -40,12 +43,13 @@ public class BudgetCacheService {
                 .toList();
 
         redisTemplate.opsForValue().set(USER_PROMOTION_KEY, sortedUserIds, USER_CACHE_TIMEOUT, TIME_UNIT_EXPIRED_CACHE);
+        log.info("Updated users cache");
         return sortedUserIds;
     }
 
-    public List<Long> updateEventsBudget(List<PromotionEvent> events) {
+    public List<Long> updateEventsCache(Stream<PromotionEvent> events) {
         LocalDateTime now = LocalDateTime.now();
-        List<Long> sortedEventIds = events.stream()
+        List<Long> sortedEventIds = events
                 .filter(promotionEvent -> promotionEvent.getPromotionData().getStartDate().isBefore(now)
                         && promotionEvent.getPromotionData().getEndDate().isAfter(now))
                 .collect(Collectors.toMap(
@@ -58,6 +62,7 @@ public class BudgetCacheService {
                 .toList();
 
         redisTemplate.opsForValue().set(EVENT_PROMOTION_KEY, sortedEventIds, EVENT_CACHE_TIMEOUT, TIME_UNIT_EXPIRED_CACHE);
+        log.info("Updated events cache");
         return sortedEventIds;
     }
 
